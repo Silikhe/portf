@@ -155,7 +155,7 @@ export function ProjectImage({
         <>
           <div className="absolute inset-0 animate-pulse bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),_rgba(10,10,10,0.9)_55%)]" />
           {shouldLoad && (
-            <div className="absolute bottom-5 left-1/2 z-10 w-[min(280px,calc(100%-32px))] -translate-x-1/2 rounded-lg border border-white/40 bg-black/95 px-4 py-3 text-white shadow-[0_0_0_1px_rgba(0,0,0,0.8),0_12px_36px_rgba(0,0,0,0.65)]">
+            <div className="absolute left-1/2 top-1/2 z-10 w-[min(280px,calc(100%-32px))] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/40 bg-black/95 px-4 py-3 text-white shadow-[0_0_0_1px_rgba(0,0,0,0.8),0_12px_36px_rgba(0,0,0,0.65)]">
               <div className="mb-2 text-center text-sm font-medium">
                 <span className="block">Loading image</span>
                 <span className="mt-1 block text-lg font-semibold tabular-nums">{progress}%</span>
