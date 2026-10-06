@@ -1,9 +1,10 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowUp, Link2, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ProjectImage } from "@/components/project-image";
 import { SiteHeader } from "@/components/site-header";
-import { getProject, projects, type Section } from "@/lib/projects";
+import { getProject, projects, type Project, type Section } from "@/lib/projects";
 
 export const Route = createFileRoute("/work/$slug")({
   head: ({ params }) => {
@@ -16,11 +17,11 @@ export const Route = createFileRoute("/work/$slug")({
         { name: "description", content: description },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
-        ...(p?.cover ? [{ property: "og:image", content: p.cover }] : []),
+        ...(p?.cover ? [{ property: "og:image", content: p.cover.img.src }] : []),
       ],
     };
   },
-  loader: ({ params }) => {
+  loader: ({ params }): { project: Project } => {
     const project = getProject(params.slug);
     if (!project) throw notFound();
     return { project };
@@ -91,124 +92,6 @@ function showProjectLinksToast(
   );
 }
 
-function ProjectImage({
-  src,
-  alt,
-  eager = false,
-  className = "",
-}: {
-  src: string;
-  alt: string;
-  eager?: boolean;
-  className?: string;
-}) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [imageSrc, setImageSrc] = useState<string>();
-  const [shouldLoad, setShouldLoad] = useState(eager);
-  const imgRef = useRef<HTMLImageElement | null>(null);
-
-  useEffect(() => {
-    if (!shouldLoad) return;
-
-    const request = new XMLHttpRequest();
-    let objectUrl: string | undefined;
-
-    request.open("GET", src);
-    request.responseType = "blob";
-    request.onprogress = (event) => {
-      if (event.lengthComputable) {
-        setProgress(Math.min(99, Math.round((event.loaded / event.total) * 100)));
-      }
-    };
-    request.onload = () => {
-      if (request.status >= 200 && request.status < 300 && request.response instanceof Blob) {
-        objectUrl = URL.createObjectURL(request.response);
-        setImageSrc(objectUrl);
-      } else {
-        setImageSrc(src);
-      }
-    };
-    request.onerror = () => setImageSrc(src);
-    request.send();
-
-    return () => {
-      request.abort();
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [shouldLoad, src]);
-
-  useEffect(() => {
-    if (eager) {
-      setShouldLoad(true);
-      return;
-    }
-
-    const node = imgRef.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setShouldLoad(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "200px 0px" },
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [eager]);
-
-  return (
-    <div className={`relative w-full overflow-hidden bg-[#090909] ${className}`}>
-      {!isLoaded && (
-        <>
-          <div className="absolute inset-0 animate-pulse bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),_rgba(10,10,10,0.9)_55%)]" />
-          {shouldLoad && (
-            <div className="absolute bottom-5 left-1/2 z-10 w-[min(280px,calc(100%-32px))] -translate-x-1/2 rounded-lg border border-white/40 bg-black/95 px-4 py-3 text-white shadow-[0_0_0_1px_rgba(0,0,0,0.8),0_12px_36px_rgba(0,0,0,0.65)]">
-              <div className="mb-2 flex items-center justify-between gap-3 text-sm font-medium">
-                <span>Loading image</span>
-                <span className="tabular-nums">{progress}%</span>
-              </div>
-              <div
-                role="progressbar"
-                aria-label={`Loading ${alt}`}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={progress}
-                className="h-2 overflow-hidden rounded-full border border-white/35 bg-white/30"
-              >
-                <div
-                  className="h-full rounded-full bg-[#c7ff5e] shadow-[0_0_12px_rgba(199,255,94,0.9)] transition-[width] duration-150"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </>
-      )}
-      <img
-        ref={imgRef}
-        src={imageSrc}
-        alt={alt}
-        loading={eager ? "eager" : "lazy"}
-        decoding="async"
-        fetchPriority={eager ? "high" : "auto"}
-        sizes="100vw"
-        onLoad={() => {
-          setProgress(100);
-          setIsLoaded(true);
-        }}
-        className={`block h-auto w-full transition-all duration-500 ${
-          isLoaded ? "scale-100 opacity-100 blur-0" : "scale-[1.01] opacity-0 blur-sm"
-        }`}
-      />
-    </div>
-  );
-}
-
 function CaseStudyActions({
   projectName,
   externalLinks,
@@ -254,7 +137,7 @@ function CaseStudyActions({
 }
 
 function CaseStudy() {
-  const { project } = Route.useLoaderData();
+  const { project } = Route.useLoaderData() as { project: Project };
   const idx = projects.findIndex((p) => p.slug === project.slug);
   const next = projects[(idx + 1) % projects.length];
   const singleImage = project.sections.find((section) => section.image)?.image ?? project.cover;
@@ -290,10 +173,13 @@ function CaseStudy() {
           <div className="w-full overflow-hidden rounded-2xl bg-black">
             {(project.images ?? (singleImage ? [singleImage] : [])).map((image, index) => (
               <ProjectImage
-                key={image}
-                src={image}
+                key={image.img.src}
+                image={image}
                 alt={`${project.name} case study image ${index + 1}`}
-                eager={index === 0}
+                loading={index === 0 ? "eager" : "lazy"}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                sizes="100vw"
+                showProgress
               />
             ))}
           </div>
@@ -328,10 +214,14 @@ function CaseStudy() {
         >
           {project.cover && (
             <ProjectImage
-              src={project.cover}
+              image={project.cover}
               alt={project.name}
-              eager
-              className="absolute inset-0"
+              loading="eager"
+              fetchPriority="high"
+              sizes="(min-width: 768px) 88vw, 100vw"
+              wrapperClassName="absolute inset-0"
+              className="h-full w-full object-cover"
+              showProgress
             />
           )}
         </div>
@@ -445,17 +335,20 @@ function CaseStudy() {
                                     : "relative aspect-[16/9] overflow-hidden rounded-[20px] border border-white/5 bg-[#0a0a0a] md:rounded-[24px]"
                                 }
                               >
-                                <img
-                                  src={s.image}
+                                <ProjectImage
+                                  image={s.image}
                                   alt={s.imageAlt ?? s.heading}
-                                  loading={i === 0 ? "eager" : "lazy"}
-                                  decoding="async"
-                                  fetchPriority={i === 0 ? "high" : "auto"}
+                                  loading="lazy"
+                                  sizes="(min-width: 768px) 52vw, 100vw"
+                                  wrapperClassName={
+                                    s.imageFit === "natural" ? "" : "absolute inset-0"
+                                  }
                                   className={
                                     s.imageFit === "natural"
                                       ? "block h-auto w-full object-contain"
                                       : "absolute inset-0 h-full w-full object-cover"
                                   }
+                                  showProgress
                                 />
                               </div>
                               {s.caption && (
@@ -477,11 +370,11 @@ function CaseStudy() {
                                       key={`${s.heading}-${idx}`}
                                       className="relative h-[260px] w-[190px] shrink-0 overflow-hidden rounded-[20px] border border-white/8 bg-black/20 md:h-[360px] md:w-[260px]"
                                     >
-                                      <img
-                                        src={img}
+                                      <ProjectImage
+                                        image={img}
                                         alt={`${s.heading} preview ${idx + 1}`}
                                         loading="lazy"
-                                        decoding="async"
+                                        sizes="260px"
                                         className="h-full w-full object-cover"
                                       />
                                     </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import profile from "@/assets/profile.png";
+import profile from "@/assets/profile.png?w=640;1024;1400&withoutEnlargement&format=avif;webp&quality=82&as=picture";
+import { ProjectImage } from "@/components/project-image";
 import { SiteHeader } from "@/components/site-header";
 import { projects } from "@/lib/projects";
 
@@ -54,12 +55,12 @@ function CircleBadge() {
         </text>
       </svg>
       <div className="absolute inset-[14%] overflow-hidden rounded-full ring-1 ring-white/10 transition-transform duration-500 group-hover:scale-[1.02]">
-        <img
-          src={profile}
+        <ProjectImage
+          image={profile}
           alt="Silikhe"
           loading="eager"
-          decoding="async"
           fetchPriority="high"
+          sizes="(min-width: 1024px) 177px, (min-width: 640px) 123px, 96px"
           className="h-full w-full object-cover object-center"
         />
         <div
@@ -149,12 +150,12 @@ function Index() {
                 className={`micro-hover zoom-glass group relative aspect-[4/3] overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm md:rounded-[32px] bg-gradient-to-br ${p.bg}`}
               >
                 {p.cover ? (
-                  <img
-                    src={p.cover}
+                  <ProjectImage
+                    image={p.cover}
                     alt={p.name}
-                    loading="eager"
-                    decoding="async"
-                    fetchPriority="high"
+                    loading={i === 0 ? "eager" : "lazy"}
+                    fetchPriority={i === 0 ? "high" : "auto"}
+                    sizes="(min-width: 768px) 50vw, 100vw"
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.08]"
                   />
                 ) : (
@@ -217,10 +218,11 @@ function Index() {
                             className={`relative h-16 w-24 md:h-20 md:w-32 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br ${p.bg}`}
                           >
                             {p.cover && (
-                              <img
-                                src={p.cover}
+                              <ProjectImage
+                                image={p.cover}
                                 alt=''
                                 loading='lazy'
+                                sizes='128px'
                                 className='absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]'
                               />
                             )}

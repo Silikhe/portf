@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ProjectImage } from "@/components/project-image";
 import { projects } from "@/lib/projects";
 
 export const Route = createFileRoute("/work/")({
@@ -77,10 +78,11 @@ function WorkIndex() {
                 className={`micro-hover zoom-glass group relative aspect-[4/3] overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm md:rounded-[32px] bg-gradient-to-br ${p.bg}`}
               >
                 {p.cover ? (
-                  <img
-                    src={p.cover}
+                  <ProjectImage
+                    image={p.cover}
                     alt={p.name}
                     loading="lazy"
+                    sizes="(min-width: 768px) 33vw, 100vw"
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.08]"
                   />
                 ) : (
