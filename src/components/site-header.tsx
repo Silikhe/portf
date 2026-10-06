@@ -59,8 +59,7 @@ export function SiteHeader({ caseStudy = false }: SiteHeaderProps) {
         >
           {caseStudy ? (
             <Link
-              to="/"
-              hash="work"
+              to="/work"
               className="rounded-full px-2.5 py-1 text-[#343c38] transition-all duration-300 hover:bg-black/5 hover:text-[#1f2522] sm:px-3"
             >
               Back to work
